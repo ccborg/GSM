@@ -275,7 +275,7 @@ class StudentPointsSystem:
             ("学号:", "id", False),
             ("姓名:", "name", False),
             ("性别:", "gender", True),
-            ("积分:", "points", False)
+            ("初始积分:", "points", False)
         ]
         
         entries = {}
@@ -503,11 +503,11 @@ class StudentPointsSystem:
         ttk.Label(info_frame, text="当前积分:", font=("微软雅黑", 10, "bold")).grid(row=2, column=0, sticky=tk.W, pady=5)
         
         # 根据积分正负显示不同颜色
-        points_color = "#e74c3c"  # 默认红色
+        points_color = "#7f8c8d"  # 默认灰色（0分）
         if current_points > 0:
             points_color = "#2ecc71"  # 正数为绿色
-        elif current_points == 0:
-            points_color = "#7f8c8d"  # 零为灰色
+        elif current_points < 0:
+            points_color = "#e74c3c"  # 负数为红色
         
         ttk.Label(info_frame, text=str(current_points), 
                  font=("微软雅黑", 16, "bold"),
@@ -636,10 +636,10 @@ class StudentPointsSystem:
         quick_buttons_row3 = [
             ("清空", "clear"),
             ("当前积分", "current"),
-            ("最大积分", "max"),
-            ("最小积分", "min"),
             ("设为0", "zero"),
-            ("设为负", "negative")
+            ("设为1", "one"),
+            ("设为-1", "neg_one"),
+            ("设为-10", "neg_ten")
         ]
         
         for text, value in quick_buttons_row3:
@@ -657,20 +657,6 @@ class StudentPointsSystem:
                     width=6,
                     command=lambda: self.points_var.set(str(current_points))
                 )
-            elif value == "max":
-                btn = ttk.Button(
-                    quick_frame3,
-                    text=text,
-                    width=6,
-                    command=lambda: self.points_var.set(str(max([int(s.get("points", 0)) for s in self.students] if self.students else 0)))
-                )
-            elif value == "min":
-                btn = ttk.Button(
-                    quick_frame3,
-                    text=text,
-                    width=6,
-                    command=lambda: self.points_var.set(str(min([int(s.get("points", 0)) for s in self.students] if self.students else 0)))
-                )
             elif value == "zero":
                 btn = ttk.Button(
                     quick_frame3,
@@ -678,12 +664,26 @@ class StudentPointsSystem:
                     width=6,
                     command=lambda: self.points_var.set("0")
                 )
-            elif value == "negative":
+            elif value == "one":
                 btn = ttk.Button(
                     quick_frame3,
                     text=text,
                     width=6,
-                    command=lambda: self.points_var.set("-1" if int(self.points_var.get() or 0) >= 0 else self.points_var.get())
+                    command=lambda: self.points_var.set("1")
+                )
+            elif value == "neg_one":
+                btn = ttk.Button(
+                    quick_frame3,
+                    text=text,
+                    width=6,
+                    command=lambda: self.points_var.set("-1")
+                )
+            elif value == "neg_ten":
+                btn = ttk.Button(
+                    quick_frame3,
+                    text=text,
+                    width=6,
+                    command=lambda: self.points_var.set("-10")
                 )
             btn.pack(side=tk.LEFT, padx=2, pady=2)
         
@@ -695,7 +695,8 @@ class StudentPointsSystem:
             "✅ 增加积分：奖励学生的优秀表现",
             "✅ 减少积分：扣除学生的违规行为积分",
             "✅ 设置积分：直接设置学生积分为指定值",
-            "⚠️ 积分可以为负数，表示学生表现不佳"
+            "⚠️ 积分可以为负数，表示学生表现不佳",
+            "📝 默认所有学生初始积分为0"
         ]
         
         for suggestion in suggestions:
@@ -956,16 +957,16 @@ class StudentPointsSystem:
             except:
                 self.students = []
         else:
-            # 创建示例数据（包含负数积分示例）
+            # 创建示例数据 - 所有学生默认分数为0
             self.students = [
-                {"id": "1001", "name": "张三", "gender": "男", "points": "85"},
-                {"id": "1002", "name": "李四", "gender": "女", "points": "92"},
-                {"id": "1003", "name": "王五", "gender": "男", "points": "78"},
-                {"id": "1004", "name": "赵六", "gender": "女", "points": "95"},
-                {"id": "1005", "name": "钱七", "gender": "男", "points": "88"},
-                {"id": "1006", "name": "孙八", "gender": "女", "points": "91"},
-                {"id": "1007", "name": "周九", "gender": "男", "points": "-10"},
-                {"id": "1008", "name": "吴十", "gender": "女", "points": "-5"}
+                {"id": "1001", "name": "张三", "gender": "男", "points": "0"},
+                {"id": "1002", "name": "李四", "gender": "女", "points": "0"},
+                {"id": "1003", "name": "王五", "gender": "男", "points": "0"},
+                {"id": "1004", "name": "赵六", "gender": "女", "points": "0"},
+                {"id": "1005", "name": "钱七", "gender": "男", "points": "0"},
+                {"id": "1006", "name": "孙八", "gender": "女", "points": "0"},
+                {"id": "1007", "name": "周九", "gender": "男", "points": "0"},
+                {"id": "1008", "name": "吴十", "gender": "女", "points": "0"}
             ]
             self.save_data()
     
