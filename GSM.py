@@ -12,6 +12,9 @@ class StudentPointsSystem:
         # 设置窗口图标和最小化尺寸
         self.root.minsize(700, 500)
         
+        # 默认密码
+        self.default_password = "GSM2025"
+        
         # 学生数据存储
         self.students = []
         self.load_data()
@@ -696,7 +699,8 @@ class StudentPointsSystem:
             "✅ 减少积分：扣除学生的违规行为积分",
             "✅ 设置积分：直接设置学生积分为指定值",
             "⚠️ 积分可以为负数，表示学生表现不佳",
-            "📝 默认所有学生初始积分为0"
+            "📝 默认所有学生初始积分为0",
+            "🔒 确认操作需要输入密码"
         ]
         
         for suggestion in suggestions:
@@ -769,6 +773,41 @@ class StudentPointsSystem:
         self.points_var.trace("w", update_prediction)
         self.op_var.trace("w", update_prediction)
         
+        # 密码验证区域
+        password_frame = ttk.LabelFrame(main_container, text="🔒 密码验证", padding="15")
+        password_frame.pack(fill=tk.X, pady=(0, 15))
+        
+        # 密码输入框
+        password_label = ttk.Label(password_frame, text="操作密码:", font=("微软雅黑", 10))
+        password_label.pack(side=tk.LEFT, padx=(0, 10))
+        
+        self.password_var = tk.StringVar()
+        password_entry = ttk.Entry(
+            password_frame, 
+            textvariable=self.password_var, 
+            width=20,
+            font=("微软雅黑", 10),
+            show="*"  # 隐藏密码
+        )
+        password_entry.pack(side=tk.LEFT, padx=(0, 10))
+        
+        # 显示/隐藏密码按钮
+        def toggle_password():
+            if password_entry.cget('show') == '*':
+                password_entry.config(show='')
+                toggle_btn.config(text="👁️ 隐藏")
+            else:
+                password_entry.config(show='*')
+                toggle_btn.config(text="👁️ 显示")
+        
+        toggle_btn = ttk.Button(
+            password_frame,
+            text="👁️ 显示",
+            command=toggle_password,
+            width=8
+        )
+        toggle_btn.pack(side=tk.LEFT)
+        
         # 按钮区域
         button_frame = ttk.LabelFrame(main_container, text="📥 确认操作", padding="15")
         button_frame.pack(fill=tk.X, pady=(0, 10))
@@ -779,6 +818,20 @@ class StudentPointsSystem:
         
         def apply_points():
             """应用积分操作"""
+            # 验证密码
+            password = self.password_var.get().strip()
+            if not password:
+                self.show_error("请输入密码")
+                password_entry.focus()
+                return
+            
+            if password != self.default_password:
+                self.show_error("密码错误！请重新输入")
+                self.password_var.set("")
+                password_entry.focus()
+                return
+            
+            # 验证积分输入
             points_str = self.points_var.get().strip()
             if not points_str:
                 self.show_error("请输入积分值")
