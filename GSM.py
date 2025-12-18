@@ -7,7 +7,7 @@ class StudentPointsSystem:
     def __init__(self, root):
         self.root = root
         self.root.title("学生积分管理系统")
-        self.root.geometry("1000x750")
+        self.root.geometry("800x550")
         
         # 设置窗口图标和最小化尺寸
         self.root.minsize(700, 500)
@@ -24,6 +24,107 @@ class StudentPointsSystem:
         
         # 默认显示所有学生
         self.refresh_student_list()
+    
+    def make_window_movable(self, window):
+        """使窗口可以通过拖动标题栏移动"""
+        # 移除窗口默认标题栏
+        window.overrideredirect(True)
+        
+        # 获取主窗口位置
+        main_x = self.root.winfo_x()
+        main_y = self.root.winfo_y()
+        
+        # 创建自定义标题栏
+        title_bar = tk.Frame(window, bg="#34495e", height=30)
+        title_bar.pack(fill=tk.X, side=tk.TOP)
+        
+        # 标题栏文本
+        title_label = tk.Label(
+            title_bar, 
+            text=window.title(), 
+            bg="#34495e", 
+            fg="white", 
+            font=("微软雅黑", 10)
+        )
+        title_label.pack(side=tk.LEFT, padx=10)
+        
+        # 关闭按钮
+        close_btn = tk.Button(
+            title_bar,
+            text="✕",
+            bg="#e74c3c",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            bd=0,
+            activebackground="#c0392b",
+            activeforeground="white",
+            command=window.destroy,
+            width=3,
+            height=1
+        )
+        close_btn.pack(side=tk.RIGHT, padx=5, pady=2)
+        
+        # 最小化按钮
+        minimize_btn = tk.Button(
+            title_bar,
+            text="—",
+            bg="#7f8c8d",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            bd=0,
+            activebackground="#95a5a6",
+            activeforeground="white",
+            command=lambda: window.withdraw(),
+            width=3,
+            height=1
+        )
+        minimize_btn.pack(side=tk.RIGHT, padx=2, pady=2)
+        
+        # 拖动变量
+        drag_data = {"x": 0, "y": 0, "dragging": False}
+        
+        def start_drag(event):
+            """开始拖动"""
+            drag_data["x"] = event.x_root - window.winfo_x()
+            drag_data["y"] = event.y_root - window.winfo_y()
+            drag_data["dragging"] = True
+        
+        def stop_drag(event):
+            """停止拖动"""
+            drag_data["dragging"] = False
+        
+        def do_drag(event):
+            """执行拖动"""
+            if drag_data["dragging"]:
+                # 计算新位置
+                new_x = event.x_root - drag_data["x"]
+                new_y = event.y_root - drag_data["y"]
+                
+                # 限制窗口不要移出屏幕太远
+                screen_width = window.winfo_screenwidth()
+                screen_height = window.winfo_screenheight()
+                
+                if new_x < -window.winfo_width() + 50:
+                    new_x = -window.winfo_width() + 50
+                if new_x > screen_width - 50:
+                    new_x = screen_width - 50
+                if new_y < 0:
+                    new_y = 0
+                if new_y > screen_height - 50:
+                    new_y = screen_height - 50
+                
+                window.geometry(f"+{new_x}+{new_y}")
+        
+        # 绑定拖动事件到标题栏
+        title_bar.bind("<ButtonPress-1>", start_drag)
+        title_bar.bind("<ButtonRelease-1>", stop_drag)
+        title_bar.bind("<B1-Motion>", do_drag)
+        
+        # 内容区域
+        content_frame = tk.Frame(window)
+        content_frame.pack(fill=tk.BOTH, expand=True)
+        
+        return content_frame
     
     def create_widgets(self):
         # 设置全局字体和样式
@@ -111,7 +212,7 @@ class StudentPointsSystem:
             ("删除学生", self.delete_student, "#e74c3c"),
             ("积分操作", self.points_operation_window, "#f39c12"),
             ("导出数据", self.export_data, "#9b59b6"),
-            ("更改密码", self.change_password_window, "#34495e")  # 新增密码更改按钮
+            ("更改密码", self.change_password_window, "#34495e")
         ]
         
         for text, command, color in buttons:
@@ -178,19 +279,16 @@ class StudentPointsSystem:
         
         dialog = tk.Toplevel(self.root)
         dialog.title("更改系统密码")
-        dialog.geometry("400x250")
+        dialog.geometry("400x300")  # 增加高度以容纳标题栏
         dialog.resizable(False, False)
         dialog.transient(self.root)
         dialog.grab_set()
         
-        # 居中对话框
-        dialog.update_idletasks()
-        x = self.root.winfo_x() + (self.root.winfo_width() - dialog.winfo_width()) // 2
-        y = self.root.winfo_y() + (self.root.winfo_height() - dialog.winfo_height()) // 2
-        dialog.geometry(f"+{x}+{y}")
+        # 使用自定义可移动窗口
+        content_frame = self.make_window_movable(dialog)
         
         # 主容器
-        main_frame = ttk.Frame(dialog, padding="20")
+        main_frame = ttk.Frame(content_frame, padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         # 标题
@@ -388,24 +486,27 @@ class StudentPointsSystem:
         
         # 初始聚焦
         new_password_entry.focus()
-    
-    def verify_password(self, title="密码验证", prompt="请输入操作密码:"):
-        """验证密码"""
-        dialog = tk.Toplevel(self.root)
-        dialog.title(f"{title}")
-        dialog.geometry("300x150")
-        dialog.resizable(False, False)
-        dialog.transient(self.root)
-        dialog.grab_set()
         
         # 居中对话框
         dialog.update_idletasks()
         x = self.root.winfo_x() + (self.root.winfo_width() - dialog.winfo_width()) // 2
         y = self.root.winfo_y() + (self.root.winfo_height() - dialog.winfo_height()) // 2
         dialog.geometry(f"+{x}+{y}")
+    
+    def verify_password(self, title="密码验证", prompt="请输入操作密码:"):
+        """验证密码"""
+        dialog = tk.Toplevel(self.root)
+        dialog.title(f"{title}")
+        dialog.geometry("300x200")  # 增加高度以容纳标题栏
+        dialog.resizable(False, False)
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        # 使用自定义可移动窗口
+        content_frame = self.make_window_movable(dialog)
         
         # 密码输入区域
-        main_frame = ttk.Frame(dialog, padding="20")
+        main_frame = ttk.Frame(content_frame, padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         ttk.Label(main_frame, text=prompt, font=("微软雅黑", 10)).pack(pady=(0, 10))
@@ -453,6 +554,12 @@ class StudentPointsSystem:
         # 绑定回车键
         dialog.bind("<Return>", lambda e: verify())
         dialog.bind("<Escape>", lambda e: cancel())
+        
+        # 居中对话框
+        dialog.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() - dialog.winfo_width()) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
         
         # 等待对话框关闭
         self.root.wait_window(dialog)
@@ -556,19 +663,16 @@ class StudentPointsSystem:
         """打开学生信息对话框"""
         dialog = tk.Toplevel(self.root)
         dialog.title(title)
-        dialog.geometry("350x250")
+        dialog.geometry("350x300")  # 增加高度以容纳标题栏
         dialog.resizable(False, False)
         dialog.transient(self.root)
         dialog.grab_set()
         
-        # 居中对话框
-        dialog.update_idletasks()
-        x = self.root.winfo_x() + (self.root.winfo_width() - dialog.winfo_width()) // 2
-        y = self.root.winfo_y() + (self.root.winfo_height() - dialog.winfo_height()) // 2
-        dialog.geometry(f"+{x}+{y}")
+        # 使用自定义可移动窗口
+        content_frame = self.make_window_movable(dialog)
         
         # 创建表单
-        form_frame = ttk.Frame(dialog, padding="20")
+        form_frame = ttk.Frame(content_frame, padding="20")
         form_frame.pack(fill=tk.BOTH, expand=True)
         
         # 表单字段
@@ -604,7 +708,7 @@ class StudentPointsSystem:
                 entries[key].insert(0, "0")  # 默认积分为0
         
         # 按钮区域
-        button_frame = ttk.Frame(dialog, padding="10")
+        button_frame = ttk.Frame(content_frame, padding="10")
         button_frame.pack(fill=tk.X)
         
         def save_student():
@@ -681,6 +785,12 @@ class StudentPointsSystem:
         
         ttk.Button(button_frame, text="保存", command=save_student, width=10).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="取消", command=dialog.destroy, width=10).pack(side=tk.LEFT, padx=5)
+        
+        # 居中对话框
+        dialog.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() - dialog.winfo_width()) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
     
     def find_student_by_id(self, student_id):
         """根据学号查找学生"""
@@ -704,7 +814,29 @@ class StudentPointsSystem:
         if not self.verify_password("删除学生"):
             return
         
-        if messagebox.askyesno("确认删除", f"确定要删除学生 [{student_name}] 吗？"):
+        # 使用可移动的确认对话框
+        dialog = tk.Toplevel(self.root)
+        dialog.title("确认删除")
+        dialog.geometry("300x180")
+        dialog.resizable(False, False)
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        # 使用自定义可移动窗口
+        content_frame = self.make_window_movable(dialog)
+        
+        # 内容区域
+        main_frame = ttk.Frame(content_frame, padding="20")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        ttk.Label(
+            main_frame, 
+            text=f"确定要删除学生 [{student_name}] 吗？", 
+            font=("微软雅黑", 11),
+            wraplength=250
+        ).pack(pady=(10, 20))
+        
+        def confirm_delete():
             # 从数据中删除
             deleted_count = 0
             new_students = []
@@ -725,6 +857,32 @@ class StudentPointsSystem:
                 self.status_var.set(f"已删除学生: {student_name}")
             else:
                 self.show_error(f"找不到学号为 {student_id} 的学生")
+            
+            dialog.destroy()
+        
+        # 按钮区域
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack()
+        
+        ttk.Button(
+            button_frame, 
+            text="✅ 确认删除", 
+            command=confirm_delete,
+            width=12
+        ).pack(side=tk.LEFT, padx=5)
+        
+        ttk.Button(
+            button_frame, 
+            text="❌ 取消", 
+            command=dialog.destroy,
+            width=12
+        ).pack(side=tk.LEFT, padx=5)
+        
+        # 居中对话框
+        dialog.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() - dialog.winfo_width()) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
     
     def on_double_click(self, event):
         """双击学生项打开编辑窗口"""
@@ -745,20 +903,17 @@ class StudentPointsSystem:
         # 创建积分操作窗口
         dialog = tk.Toplevel(self.root)
         dialog.title(f"积分操作 - {student_name}")
-        dialog.geometry("520x500")  # 增大窗口尺寸以容纳更多内容
-        dialog.resizable(True, True)  # 允许调整大小
+        dialog.geometry("520x550")  # 增加高度以容纳标题栏
+        dialog.resizable(True, True)
         dialog.transient(self.root)
         dialog.grab_set()
         
-        # 居中对话框
-        dialog.update_idletasks()
-        x = self.root.winfo_x() + (self.root.winfo_width() - dialog.winfo_width()) // 2
-        y = self.root.winfo_y() + (self.root.winfo_height() - dialog.winfo_height()) // 2
-        dialog.geometry(f"+{x}+{y}")
+        # 使用自定义可移动窗口
+        content_frame = self.make_window_movable(dialog)
         
         # 创建主容器 - 使用Canvas实现滚动
-        main_canvas = tk.Canvas(dialog, highlightthickness=0)
-        scrollbar = ttk.Scrollbar(dialog, orient=tk.VERTICAL, command=main_canvas.yview)
+        main_canvas = tk.Canvas(content_frame, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(content_frame, orient=tk.VERTICAL, command=main_canvas.yview)
         scrollable_frame = ttk.Frame(main_canvas)
         
         # 配置滚动区域
@@ -1218,7 +1373,13 @@ class StudentPointsSystem:
         dialog.update_idletasks()
         min_height = min(600, main_canvas.winfo_reqheight())
         min_width = 520
-        dialog.minsize(min_width, min_height)
+        dialog.minsize(min_width, min_height + 30)  # 加上标题栏高度
+        
+        # 居中对话框
+        dialog.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() - dialog.winfo_width()) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
     
     def select_operation(self, operation, dialog):
         """选择操作类型并更新按钮状态"""
