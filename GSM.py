@@ -7,7 +7,7 @@ class StudentPointsSystem:
     def __init__(self, root):
         self.root = root
         self.root.title("学生积分管理系统")
-        self.root.geometry("800x550")
+        self.root.geometry("1000x750")
         
         # 设置窗口图标和最小化尺寸
         self.root.minsize(700, 500)
@@ -1437,3 +1437,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
