@@ -450,16 +450,48 @@ class StudentPointsSystem:
         """打开主题设置窗口"""
         dialog = tk.Toplevel(self.root)
         dialog.title("主题设置")
-        dialog.geometry("400x350")
-        dialog.resizable(False, False)
+        dialog.geometry("400x400")  # 稍微增加高度以适应滚动条
+        dialog.resizable(False, True)  # 允许垂直调整大小
         dialog.transient(self.root)
         dialog.grab_set()
         
         # 添加可移动标题栏并获取内容区域
         content_frame = self.add_movable_title_bar(dialog, "主题设置")
         
+        # 创建Canvas和滚动条
+        canvas = tk.Canvas(content_frame, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(content_frame, orient=tk.VERTICAL, command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+        
+        # 配置滚动区域
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        # 在Canvas中创建窗口
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # 鼠标滚轮滚动支持
+        def _on_mousewheel(event):
+            if dialog.winfo_exists():
+                try:
+                    canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+                except tk.TclError:
+                    pass
+        
+        # 绑定鼠标滚轮事件
+        dialog.bind("<MouseWheel>", _on_mousewheel)
+        canvas.bind("<MouseWheel>", _on_mousewheel)
+        scrollable_frame.bind("<MouseWheel>", _on_mousewheel)
+        
+        # 布局滚动条和Canvas
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
         # 主容器
-        main_frame = ttk.Frame(content_frame, padding="20")
+        main_frame = ttk.Frame(scrollable_frame, padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         # 主题设置标题
@@ -512,7 +544,12 @@ class StudentPointsSystem:
         explanations = [
             "• 明亮主题：适合白天或光线充足的环境",
             "• 黑暗主题：适合夜间或光线较暗的环境",
-            "• 主题更改后需要重启程序生效"
+            "• 主题更改后需要重启程序生效",
+            "• 主题设置会影响所有窗口的颜色",
+            "• 您可以在设置中随时切换主题",
+            "• 当前选择的主题会以高亮显示",
+            "• 主题预览区域展示了主要颜色",
+            "• 建议根据使用环境选择合适主题"
         ]
         
         for explanation in explanations:
@@ -534,7 +571,7 @@ class StudentPointsSystem:
         
         # 按钮区域
         button_frame = ttk.Frame(main_frame)
-        button_frame.pack()
+        button_frame.pack(pady=(10, 0))
         
         ttk.Button(
             button_frame, 
@@ -553,6 +590,21 @@ class StudentPointsSystem:
         # 绑定回车键
         dialog.bind("<Return>", lambda e: save_theme())
         dialog.bind("<Escape>", lambda e: cancel())
+        
+        # 窗口关闭时清理事件绑定
+        def on_close():
+            dialog.unbind("<MouseWheel>")
+            canvas.unbind("<MouseWheel>")
+            scrollable_frame.unbind("<MouseWheel>")
+            dialog.destroy()
+        
+        dialog.protocol("WM_DELETE_WINDOW", on_close)
+        
+        # 配置滚动区域的最小尺寸
+        dialog.update_idletasks()
+        min_height = min(400, canvas.winfo_reqheight())
+        min_width = 400
+        dialog.minsize(min_width, min_height)
         
         # 居中对话框
         dialog.update_idletasks()
@@ -874,7 +926,7 @@ class StudentPointsSystem:
         display_students.sort(key=lambda x: int(x.get("points", 0)), reverse=True)
         
         for student in display_students:
-            points = int(student.get("points", "0"))
+            points = int(student.get("points", 0))
             self.tree.insert("", tk.END, values=(
                 student.get("id", ""),
                 student.get("name", ""),
@@ -1757,4 +1809,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
