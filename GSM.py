@@ -7,13 +7,20 @@ class StudentPointsSystem:
     def __init__(self, root):
         self.root = root
         self.root.title("学生积分管理系统")
-        self.root.geometry("1000x750")
+        self.root.geometry("800x550")
         
         # 设置窗口图标和最小化尺寸
         self.root.minsize(700, 500)
         
         # 默认密码
         self.default_password = "GSM2025"
+        
+        # 主题设置（默认为白色主题）
+        self.current_theme = "light"
+        self.load_settings()
+        
+        # 应用初始主题
+        self.apply_theme()
         
         # 学生数据存储
         self.students = []
@@ -25,28 +32,229 @@ class StudentPointsSystem:
         # 默认显示所有学生
         self.refresh_student_list()
     
+    def load_settings(self):
+        """加载设置"""
+        if os.path.exists("settings.json"):
+            try:
+                with open("settings.json", "r", encoding="utf-8") as f:
+                    settings = json.load(f)
+                    if "theme" in settings:
+                        self.current_theme = settings["theme"]
+                    if "password" in settings:
+                        self.default_password = settings["password"]
+            except:
+                pass
+    
+    def save_settings(self):
+        """保存设置"""
+        try:
+            settings = {
+                "theme": self.current_theme,
+                "password": self.default_password
+            }
+            with open("settings.json", "w", encoding="utf-8") as f:
+                json.dump(settings, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"保存设置时出错: {e}")
+    
+    def apply_theme(self):
+        """应用当前主题"""
+        if self.current_theme == "dark":
+            # 黑暗主题颜色
+            self.bg_color = "#1a1a1a"
+            self.fg_color = "#ffffff"
+            self.bg_light = "#2d2d2d"
+            self.bg_lighter = "#3d3d3d"
+            self.accent_color = "#3498db"
+            self.tree_bg = "#2d2d2d"
+            self.tree_fg = "#ffffff"
+            self.tree_select_bg = "#3498db"
+            self.tree_select_fg = "#ffffff"
+            self.button_bg = "#3d3d3d"
+            self.button_fg = "#ffffff"
+            self.frame_bg = "#2d2d2d"
+            self.entry_bg = "#3d3d3d"
+            self.entry_fg = "#ffffff"
+            self.label_bg = "#2d2d2d"
+            self.label_fg = "#ffffff"
+        else:
+            # 明亮主题颜色
+            self.bg_color = "#f5f5f5"
+            self.fg_color = "#333333"
+            self.bg_light = "#ffffff"
+            self.bg_lighter = "#f0f0f0"
+            self.accent_color = "#1a5276"
+            self.tree_bg = "#ffffff"
+            self.tree_fg = "#333333"
+            self.tree_select_bg = "#3498db"
+            self.tree_select_fg = "#ffffff"
+            self.button_bg = "#e0e0e0"
+            self.button_fg = "#333333"
+            self.frame_bg = "#ffffff"
+            self.entry_bg = "#ffffff"
+            self.entry_fg = "#333333"
+            self.label_bg = "#ffffff"
+            self.label_fg = "#333333"
+        
+        # 配置样式
+        style = ttk.Style()
+        
+        if self.current_theme == "dark":
+            # 配置黑暗主题
+            style.theme_use('clam')
+            
+            # 配置Treeview
+            style.configure("Treeview",
+                background=self.tree_bg,
+                foreground=self.tree_fg,
+                fieldbackground=self.tree_bg,
+                borderwidth=0,
+                font=("微软雅黑", 10)
+            )
+            style.map('Treeview', 
+                background=[('selected', self.tree_select_bg)],
+                foreground=[('selected', self.tree_select_fg)]
+            )
+            
+            # 配置Treeview标题
+            style.configure("Treeview.Heading",
+                background="#34495e",
+                foreground="#ffffff",
+                font=("微软雅黑", 10, "bold"),
+                relief="flat"
+            )
+            
+            # 配置按钮
+            style.configure("TButton",
+                background=self.button_bg,
+                foreground=self.button_fg,
+                borderwidth=1,
+                font=("微软雅黑", 10),
+                relief="raised"
+            )
+            style.map("TButton",
+                background=[('active', self.accent_color)],
+                foreground=[('active', '#ffffff')]
+            )
+            
+            # 配置标签
+            style.configure("TLabel",
+                background=self.label_bg,
+                foreground=self.label_fg,
+                font=("微软雅黑", 10)
+            )
+            
+            # 配置框架
+            style.configure("TFrame",
+                background=self.frame_bg
+            )
+            
+            # 配置标签框架
+            style.configure("TLabelframe",
+                background=self.frame_bg,
+                foreground=self.fg_color
+            )
+            style.configure("TLabelframe.Label",
+                background=self.frame_bg,
+                foreground=self.fg_color,
+                font=("微软雅黑", 10, "bold")
+            )
+            
+            # 配置滚动条
+            style.configure("Vertical.TScrollbar",
+                background=self.button_bg,
+                troughcolor=self.bg_color,
+                borderwidth=0,
+                relief="flat"
+            )
+            
+        else:
+            # 配置明亮主题
+            style.theme_use('clam')
+            
+            # 配置Treeview
+            style.configure("Treeview",
+                background=self.tree_bg,
+                foreground=self.tree_fg,
+                fieldbackground=self.tree_bg,
+                borderwidth=0,
+                font=("微软雅黑", 10)
+            )
+            style.map('Treeview', 
+                background=[('selected', self.tree_select_bg)],
+                foreground=[('selected', self.tree_select_fg)]
+            )
+            
+            # 配置Treeview标题
+            style.configure("Treeview.Heading",
+                background="#d6dbdf",
+                foreground="#333333",
+                font=("微软雅黑", 10, "bold"),
+                relief="flat"
+            )
+            
+            # 配置按钮
+            style.configure("TButton",
+                background=self.button_bg,
+                foreground=self.button_fg,
+                borderwidth=1,
+                font=("微软雅黑", 10),
+                relief="raised"
+            )
+            style.map("TButton",
+                background=[('active', '#d0d0d0')]
+            )
+            
+            # 配置标签
+            style.configure("TLabel",
+                background=self.label_bg,
+                foreground=self.label_fg,
+                font=("微软雅黑", 10)
+            )
+            
+            # 配置框架
+            style.configure("TFrame",
+                background=self.frame_bg
+            )
+            
+            # 配置标签框架
+            style.configure("TLabelframe",
+                background=self.frame_bg,
+                foreground=self.fg_color
+            )
+            style.configure("TLabelframe.Label",
+                background=self.frame_bg,
+                foreground=self.fg_color,
+                font=("微软雅黑", 10, "bold")
+            )
+        
+        # 应用主题到主窗口
+        self.root.configure(bg=self.bg_color)
+    
     def add_movable_title_bar(self, window, title_text):
         """为窗口添加可移动标题栏"""
         # 首先创建一个主容器来包含标题栏和内容
-        main_container = tk.Frame(window)
+        main_container = tk.Frame(window, bg=self.bg_color)
         main_container.pack(fill=tk.BOTH, expand=True)
         
         # 创建标题栏
-        title_bar = tk.Frame(main_container, bg="#34495e", height=35)
+        title_bar_color = "#34495e" if self.current_theme == "dark" else "#34495e"
+        title_bar = tk.Frame(main_container, bg=title_bar_color, height=35)
         title_bar.pack(fill=tk.X, side=tk.TOP)
         
         # 标题栏文本
         title_label = tk.Label(
             title_bar, 
             text=title_text, 
-            bg="#34495e", 
+            bg=title_bar_color, 
             fg="white", 
             font=("微软雅黑", 11, "bold")
         )
         title_label.pack(side=tk.LEFT, padx=15, pady=5)
         
         # 添加一个分隔线
-        separator = tk.Frame(main_container, height=2, bg="#2c3e50")
+        separator_color = "#2c3e50" if self.current_theme == "dark" else "#2c3e50"
+        separator = tk.Frame(main_container, height=2, bg=separator_color)
         separator.pack(fill=tk.X, side=tk.TOP)
         
         # 拖动变量
@@ -94,7 +302,7 @@ class StudentPointsSystem:
         title_bar.bind("<B1-Motion>", do_drag)
         
         # 返回内容区域
-        content_frame = tk.Frame(main_container)
+        content_frame = tk.Frame(main_container, bg=self.bg_color)
         content_frame.pack(fill=tk.BOTH, expand=True)
         
         return content_frame
@@ -106,20 +314,12 @@ class StudentPointsSystem:
         
         # 创建自定义样式
         style = ttk.Style()
-        style.theme_use('clam')
         
-        # 自定义颜色方案
+        # 自定义标题样式
         style.configure("Title.TLabel", 
                        font=("微软雅黑", 14, "bold"),
-                       foreground="#1a5276")
-        
-        style.configure("Header.Treeview",
-                       font=("微软雅黑", 10, "bold"),
-                       background="#d6dbdf")
-        
-        style.map("Treeview", 
-                 background=[("selected", "#3498db")],
-                 foreground=[("selected", "white")])
+                       foreground=self.accent_color,
+                       background=self.bg_color)
         
         # 主容器
         main_container = ttk.Frame(self.root)
@@ -170,9 +370,9 @@ class StudentPointsSystem:
                                width=8)
         search_btn.pack(side=tk.LEFT, padx=(0, 5))
         
-        # 修改清空按钮的功能：清空搜索框并刷新列表
+        # 修改清空按钮 - 添加lambda确保立即执行
         clear_btn = ttk.Button(search_frame, text="清空", 
-                              command=self.clear_search,
+                              command=lambda: self.clear_search(),
                               width=8)
         clear_btn.pack(side=tk.LEFT)
         
@@ -186,7 +386,8 @@ class StudentPointsSystem:
             ("删除学生", self.delete_student, "#e74c3c"),
             ("积分操作", self.points_operation_window, "#f39c12"),
             ("导出数据", self.export_data, "#9b59b6"),
-            ("更改密码", self.change_password_window, "#34495e")
+            ("更改密码", self.change_password_window, "#34495e"),
+            ("主题设置", self.theme_settings_window, "#7d3c98")  # 新增主题设置按钮
         ]
         
         for text, command, color in buttons:
@@ -245,6 +446,124 @@ class StudentPointsSystem:
                               padding=(5, 2))
         status_bar.pack(fill=tk.X, pady=(10, 0))
     
+    def theme_settings_window(self):
+        """打开主题设置窗口"""
+        dialog = tk.Toplevel(self.root)
+        dialog.title("主题设置")
+        dialog.geometry("400x350")
+        dialog.resizable(False, False)
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        # 添加可移动标题栏并获取内容区域
+        content_frame = self.add_movable_title_bar(dialog, "主题设置")
+        
+        # 主容器
+        main_frame = ttk.Frame(content_frame, padding="20")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # 主题设置标题
+        ttk.Label(
+            main_frame, 
+            text="选择主题", 
+            font=("微软雅黑", 12, "bold"),
+            foreground=self.accent_color
+        ).pack(pady=(0, 20))
+        
+        # 主题选择变量
+        theme_var = tk.StringVar(value=self.current_theme)
+        
+        # 主题预览框架
+        preview_frame = ttk.LabelFrame(main_frame, text="主题预览", padding="15")
+        preview_frame.pack(fill=tk.X, pady=(0, 20))
+        
+        # 创建主题选项
+        themes = [
+            ("明亮主题 (浅色)", "light", "#f5f5f5", "#333333"),
+            ("黑暗主题 (深色)", "dark", "#1a1a1a", "#ffffff")
+        ]
+        
+        for theme_name, theme_value, bg_color, fg_color in themes:
+            theme_frame = ttk.Frame(preview_frame)
+            theme_frame.pack(fill=tk.X, pady=5)
+            
+            # 单选按钮
+            rb = ttk.Radiobutton(
+                theme_frame,
+                text=theme_name,
+                variable=theme_var,
+                value=theme_value,
+                command=lambda t=theme_value, b=bg_color, f=fg_color: self.update_theme_preview(t, b, f)
+            )
+            rb.pack(side=tk.LEFT, padx=(0, 15))
+            
+            # 主题预览颜色块
+            preview_canvas = tk.Canvas(theme_frame, width=40, height=40, bg=bg_color, highlightthickness=1, highlightbackground="#cccccc")
+            preview_canvas.pack(side=tk.LEFT)
+            
+            # 添加一些示例文本
+            preview_canvas.create_text(20, 15, text="Aa", fill=fg_color, font=("微软雅黑", 10))
+            preview_canvas.create_text(20, 30, text="文本", fill=fg_color, font=("微软雅黑", 9))
+        
+        # 主题说明
+        explanation_frame = ttk.LabelFrame(main_frame, text="主题说明", padding="10")
+        explanation_frame.pack(fill=tk.X, pady=(0, 20))
+        
+        explanations = [
+            "• 明亮主题：适合白天或光线充足的环境",
+            "• 黑暗主题：适合夜间或光线较暗的环境",
+            "• 主题更改后需要重启程序生效"
+        ]
+        
+        for explanation in explanations:
+            ttk.Label(explanation_frame, text=explanation, font=("微软雅黑", 9)).pack(anchor=tk.W, pady=2)
+        
+        def save_theme():
+            """保存主题设置"""
+            new_theme = theme_var.get()
+            
+            if new_theme != self.current_theme:
+                self.current_theme = new_theme
+                self.save_settings()
+                messagebox.showinfo("成功", "主题设置已保存！\n请重启程序使主题生效。")
+            
+            dialog.destroy()
+        
+        def cancel():
+            dialog.destroy()
+        
+        # 按钮区域
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack()
+        
+        ttk.Button(
+            button_frame, 
+            text="✅ 保存设置", 
+            command=save_theme,
+            width=12
+        ).pack(side=tk.LEFT, padx=5)
+        
+        ttk.Button(
+            button_frame, 
+            text="❌ 取消", 
+            command=cancel,
+            width=12
+        ).pack(side=tk.LEFT, padx=5)
+        
+        # 绑定回车键
+        dialog.bind("<Return>", lambda e: save_theme())
+        dialog.bind("<Escape>", lambda e: cancel())
+        
+        # 居中对话框
+        dialog.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() - dialog.winfo_width()) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
+    
+    def update_theme_preview(self, theme, bg_color, fg_color):
+        """更新主题预览（此处仅作为示例）"""
+        pass  # 在实际应用中，可以在这里动态更新预览
+    
     def clear_search(self):
         """清空搜索框并刷新学生列表"""
         # 清空搜索框内容
@@ -253,7 +572,7 @@ class StudentPointsSystem:
         self.refresh_student_list()
         # 更新状态栏
         self.status_var.set("已清空搜索条件，显示所有学生")
-        # 焦点回到搜索框
+        # 焦点回到主窗口
         self.root.focus_set()
     
     def change_password_window(self):
@@ -427,6 +746,7 @@ class StudentPointsSystem:
             
             # 更新密码
             self.default_password = new_password
+            self.save_settings()
             
             # 显示成功消息
             messagebox.showinfo("成功", "系统密码已成功更改！")
@@ -566,7 +886,10 @@ class StudentPointsSystem:
         self.update_statistics(display_students)
         
         # 更新状态
-        self.status_var.set(f"显示 {len(display_students)} 名学生")
+        if students is None:
+            self.status_var.set(f"显示所有学生 ({len(display_students)} 名)")
+        else:
+            self.status_var.set(f"显示 {len(display_students)} 名学生")
     
     def update_statistics(self, students=None):
         """更新统计信息"""
@@ -605,7 +928,7 @@ class StudentPointsSystem:
                 results.append(student)
         
         self.refresh_student_list(results)
-        self.status_var.set(f"搜索到 {len(results)} 名学生 (关键词: {keyword})")
+        self.status_var.set(f"搜索到 {len(results)} 名学生 (关键词: '{keyword}')")
     
     def add_student_window(self):
         """打开添加学生窗口"""
@@ -832,7 +1155,7 @@ class StudentPointsSystem:
         # 创建积分操作窗口
         dialog = tk.Toplevel(self.root)
         dialog.title(f"积分操作 - {student_name}")
-        dialog.geometry("540x600")  # 增加高度
+        dialog.geometry("540x600")
         dialog.resizable(True, True)
         dialog.transient(self.root)
         dialog.grab_set()
@@ -857,13 +1180,13 @@ class StudentPointsSystem:
         
         # 鼠标滚轮滚动支持
         def _on_mousewheel(event):
-            if dialog.winfo_exists():  # 检查窗口是否还存在
+            if dialog.winfo_exists():
                 try:
                     main_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
                 except tk.TclError:
-                    pass  # 窗口已经关闭，忽略错误
+                    pass
         
-        # 绑定鼠标滚轮事件到当前对话框
+        # 绑定鼠标滚轮事件
         dialog.bind("<MouseWheel>", _on_mousewheel)
         main_canvas.bind("<MouseWheel>", _on_mousewheel)
         scrollable_frame.bind("<MouseWheel>", _on_mousewheel)
@@ -872,7 +1195,7 @@ class StudentPointsSystem:
         main_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
-        # 主容器，使内容可以随窗口调整大小
+        # 主容器
         main_container = ttk.Frame(scrollable_frame, padding="15")
         main_container.pack(fill=tk.BOTH, expand=True)
         
@@ -892,11 +1215,11 @@ class StudentPointsSystem:
         ttk.Label(info_frame, text="当前积分:", font=("微软雅黑", 10, "bold")).grid(row=2, column=0, sticky=tk.W, pady=5)
         
         # 根据积分正负显示不同颜色
-        points_color = "#7f8c8d"  # 默认灰色（0分）
+        points_color = "#7f8c8d"
         if current_points > 0:
-            points_color = "#2ecc71"  # 正数为绿色
+            points_color = "#2ecc71"
         elif current_points < 0:
-            points_color = "#e74c3c"  # 负数为红色
+            points_color = "#e74c3c"
         
         ttk.Label(info_frame, text=str(current_points), 
                  font=("微软雅黑", 16, "bold"),
@@ -968,7 +1291,7 @@ class StudentPointsSystem:
             font=("微软雅黑", 10)
         )
         points_entry.pack(side=tk.LEFT, padx=(0, 10))
-        points_entry.focus()  # 自动聚焦到输入框
+        points_entry.focus()
         
         # 快捷按钮框架
         quick_buttons_frame = ttk.LabelFrame(operation_frame, text="🚀 快捷操作", padding="10")
@@ -1133,11 +1456,11 @@ class StudentPointsSystem:
                     
                     # 根据新积分值设置颜色
                     if new_points > 0:
-                        points_color = "#2ecc71"  # 正数为绿色
+                        points_color = "#2ecc71"
                     elif new_points < 0:
-                        points_color = "#e74c3c"  # 负数为红色
+                        points_color = "#e74c3c"
                     else:
-                        points_color = "#7f8c8d"  # 零为灰色
+                        points_color = "#7f8c8d"
                     
                     if new_points > current_points:
                         arrow = "↑"
@@ -1173,7 +1496,7 @@ class StudentPointsSystem:
             textvariable=self.password_var, 
             width=20,
             font=("微软雅黑", 10),
-            show="*"  # 隐藏密码
+            show="*"
         )
         password_entry.pack(side=tk.LEFT, padx=(0, 10))
         
@@ -1287,7 +1610,6 @@ class StudentPointsSystem:
         
         # 窗口关闭时清理事件绑定
         def on_close():
-            # 清理事件绑定
             dialog.unbind("<MouseWheel>")
             main_canvas.unbind("<MouseWheel>")
             scrollable_frame.unbind("<MouseWheel>")
@@ -1325,14 +1647,12 @@ class StudentPointsSystem:
         # 更新所有按钮状态
         for op, btn in self.operation_buttons.items():
             if op == operation:
-                # 选中的按钮使用选中颜色
                 btn.config(
                     bg=button_colors[op]["selected"],
                     relief=tk.SUNKEN,
                     state=tk.DISABLED
                 )
             else:
-                # 未选中的按钮使用正常颜色
                 btn.config(
                     bg=button_colors[op]["normal"],
                     relief=tk.RAISED,
@@ -1437,4 +1757,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
