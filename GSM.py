@@ -7,7 +7,7 @@ class StudentPointsSystem:
     def __init__(self, root):
         self.root = root
         self.root.title("学生积分管理系统")
-        self.root.geometry("800x550")
+        self.root.geometry("1000x750")
         
         # 设置窗口图标和最小化尺寸
         self.root.minsize(700, 500)
@@ -110,7 +110,8 @@ class StudentPointsSystem:
             ("编辑学生", self.edit_student_window, "#3498db"),
             ("删除学生", self.delete_student, "#e74c3c"),
             ("积分操作", self.points_operation_window, "#f39c12"),
-            ("导出数据", self.export_data, "#9b59b6")
+            ("导出数据", self.export_data, "#9b59b6"),
+            ("更改密码", self.change_password_window, "#34495e")  # 新增密码更改按钮
         ]
         
         for text, command, color in buttons:
@@ -168,6 +169,295 @@ class StudentPointsSystem:
                               anchor=tk.W,
                               padding=(5, 2))
         status_bar.pack(fill=tk.X, pady=(10, 0))
+    
+    def change_password_window(self):
+        """打开更改密码窗口"""
+        # 首先验证当前密码
+        if not self.verify_password("更改密码", "请输入当前密码以继续"):
+            return
+        
+        dialog = tk.Toplevel(self.root)
+        dialog.title("更改系统密码")
+        dialog.geometry("400x250")
+        dialog.resizable(False, False)
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        # 居中对话框
+        dialog.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() - dialog.winfo_width()) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
+        
+        # 主容器
+        main_frame = ttk.Frame(dialog, padding="20")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # 标题
+        ttk.Label(
+            main_frame, 
+            text="更改系统密码", 
+            font=("微软雅黑", 12, "bold"),
+            foreground="#1a5276"
+        ).pack(pady=(0, 20))
+        
+        # 表单字段
+        fields = []
+        
+        # 新密码
+        new_password_frame = ttk.Frame(main_frame)
+        new_password_frame.pack(fill=tk.X, pady=8)
+        
+        ttk.Label(new_password_frame, text="新密码:", width=12).pack(side=tk.LEFT)
+        new_password_var = tk.StringVar()
+        new_password_entry = ttk.Entry(
+            new_password_frame, 
+            textvariable=new_password_var, 
+            width=25,
+            font=("微软雅黑", 10),
+            show="*"
+        )
+        new_password_entry.pack(side=tk.LEFT)
+        fields.append(("new_password", new_password_var, new_password_entry))
+        
+        # 确认新密码
+        confirm_password_frame = ttk.Frame(main_frame)
+        confirm_password_frame.pack(fill=tk.X, pady=8)
+        
+        ttk.Label(confirm_password_frame, text="确认新密码:", width=12).pack(side=tk.LEFT)
+        confirm_password_var = tk.StringVar()
+        confirm_password_entry = ttk.Entry(
+            confirm_password_frame, 
+            textvariable=confirm_password_var, 
+            width=25,
+            font=("微软雅黑", 10),
+            show="*"
+        )
+        confirm_password_entry.pack(side=tk.LEFT)
+        fields.append(("confirm_password", confirm_password_var, confirm_password_entry))
+        
+        # 密码强度提示
+        password_strength_var = tk.StringVar(value="")
+        password_strength_label = ttk.Label(
+            main_frame, 
+            textvariable=password_strength_var,
+            font=("微软雅黑", 9)
+        )
+        password_strength_label.pack(pady=(5, 15))
+        
+        def check_password_strength():
+            """检查密码强度"""
+            password = new_password_var.get()
+            
+            if not password:
+                password_strength_var.set("")
+                password_strength_label.configure(foreground="#7f8c8d")
+                return
+            
+            # 密码强度评估
+            strength = 0
+            suggestions = []
+            
+            if len(password) >= 8:
+                strength += 1
+            else:
+                suggestions.append("密码长度至少8位")
+            
+            if any(c.isupper() for c in password):
+                strength += 1
+            else:
+                suggestions.append("包含大写字母")
+            
+            if any(c.islower() for c in password):
+                strength += 1
+            else:
+                suggestions.append("包含小写字母")
+            
+            if any(c.isdigit() for c in password):
+                strength += 1
+            else:
+                suggestions.append("包含数字")
+            
+            if any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+                strength += 1
+            else:
+                suggestions.append("包含特殊字符")
+            
+            # 设置强度和颜色
+            if strength >= 4:
+                password_strength_var.set("🔒 密码强度: 强")
+                password_strength_label.configure(foreground="#2ecc71")
+            elif strength >= 3:
+                password_strength_var.set("⚠️ 密码强度: 中")
+                password_strength_label.configure(foreground="#f39c12")
+            else:
+                password_strength_var.set("⚠️ 密码强度: 弱")
+                password_strength_label.configure(foreground="#e74c3c")
+                
+                if suggestions:
+                    suggestion_text = "建议: " + "、".join(suggestions[:2])
+                    if len(suggestions) > 2:
+                        suggestion_text += "等"
+                    password_strength_var.set(password_strength_var.get() + "\n" + suggestion_text)
+        
+        # 绑定密码强度检查
+        new_password_var.trace("w", lambda *args: check_password_strength())
+        
+        # 显示/隐藏密码按钮
+        show_password_var = tk.BooleanVar(value=False)
+        
+        def toggle_password_visibility():
+            show = not show_password_var.get()
+            show_password_var.set(show)
+            
+            if show:
+                new_password_entry.config(show='')
+                confirm_password_entry.config(show='')
+                show_hide_btn.config(text="👁️ 隐藏密码")
+            else:
+                new_password_entry.config(show='*')
+                confirm_password_entry.config(show='*')
+                show_hide_btn.config(text="👁️ 显示密码")
+        
+        show_hide_btn = ttk.Button(
+            main_frame,
+            text="👁️ 显示密码",
+            command=toggle_password_visibility,
+            width=15
+        )
+        show_hide_btn.pack(pady=(0, 15))
+        
+        def save_new_password():
+            """保存新密码"""
+            new_password = new_password_var.get().strip()
+            confirm_password = confirm_password_var.get().strip()
+            
+            # 验证
+            if not new_password:
+                messagebox.showwarning("警告", "新密码不能为空")
+                new_password_entry.focus()
+                return
+            
+            if len(new_password) < 4:
+                messagebox.showwarning("警告", "密码长度至少4位")
+                new_password_entry.focus()
+                return
+            
+            if new_password != confirm_password:
+                messagebox.showerror("错误", "两次输入的密码不一致")
+                confirm_password_entry.focus()
+                return
+            
+            # 确认更改
+            if not messagebox.askyesno("确认更改", "确定要更改系统密码吗？"):
+                return
+            
+            # 更新密码
+            self.default_password = new_password
+            
+            # 显示成功消息
+            messagebox.showinfo("成功", "系统密码已成功更改！")
+            self.status_var.set("系统密码已更新")
+            
+            dialog.destroy()
+        
+        def cancel():
+            dialog.destroy()
+        
+        # 按钮区域
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack()
+        
+        ttk.Button(
+            button_frame, 
+            text="✅ 确定更改", 
+            command=save_new_password,
+            width=12
+        ).pack(side=tk.LEFT, padx=5)
+        
+        ttk.Button(
+            button_frame, 
+            text="❌ 取消", 
+            command=cancel,
+            width=12
+        ).pack(side=tk.LEFT, padx=5)
+        
+        # 绑定回车键
+        dialog.bind("<Return>", lambda e: save_new_password())
+        dialog.bind("<Escape>", lambda e: cancel())
+        
+        # 初始聚焦
+        new_password_entry.focus()
+    
+    def verify_password(self, title="密码验证", prompt="请输入操作密码:"):
+        """验证密码"""
+        dialog = tk.Toplevel(self.root)
+        dialog.title(f"{title}")
+        dialog.geometry("300x150")
+        dialog.resizable(False, False)
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        # 居中对话框
+        dialog.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() - dialog.winfo_width()) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
+        
+        # 密码输入区域
+        main_frame = ttk.Frame(dialog, padding="20")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        ttk.Label(main_frame, text=prompt, font=("微软雅黑", 10)).pack(pady=(0, 10))
+        
+        password_var = tk.StringVar()
+        password_entry = ttk.Entry(
+            main_frame, 
+            textvariable=password_var, 
+            width=25,
+            font=("微软雅黑", 10),
+            show="*"
+        )
+        password_entry.pack(pady=(0, 15))
+        password_entry.focus()
+        
+        result = {"verified": False}
+        
+        def verify():
+            """验证密码"""
+            password = password_var.get().strip()
+            if not password:
+                messagebox.showwarning("警告", "请输入密码")
+                password_entry.focus()
+                return
+            
+            if password != self.default_password:
+                messagebox.showerror("错误", "密码错误！")
+                password_var.set("")
+                password_entry.focus()
+                return
+            
+            result["verified"] = True
+            dialog.destroy()
+        
+        def cancel():
+            dialog.destroy()
+        
+        # 按钮区域
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack()
+        
+        ttk.Button(button_frame, text="确定", command=verify, width=10).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="取消", command=cancel, width=10).pack(side=tk.LEFT, padx=5)
+        
+        # 绑定回车键
+        dialog.bind("<Return>", lambda e: verify())
+        dialog.bind("<Escape>", lambda e: cancel())
+        
+        # 等待对话框关闭
+        self.root.wait_window(dialog)
+        
+        return result["verified"]
     
     def refresh_student_list(self, students=None):
         """刷新学生列表"""
@@ -236,6 +526,10 @@ class StudentPointsSystem:
     
     def add_student_window(self):
         """打开添加学生窗口"""
+        # 添加密码验证
+        if not self.verify_password("添加学生"):
+            return
+        
         self.open_student_dialog("添加学生")
     
     def edit_student_window(self):
@@ -250,6 +544,10 @@ class StudentPointsSystem:
         
         student = self.find_student_by_id(student_id)
         if student:
+            # 添加密码验证
+            if not self.verify_password("编辑学生"):
+                return
+                
             self.open_student_dialog("编辑学生", student)
         else:
             messagebox.showerror("错误", f"找不到学号为 {student_id} 的学生")
@@ -401,6 +699,10 @@ class StudentPointsSystem:
         item = self.tree.item(selected[0])
         student_id = str(item["values"][0])
         student_name = item["values"][1]
+        
+        # 添加密码验证
+        if not self.verify_password("删除学生"):
+            return
         
         if messagebox.askyesno("确认删除", f"确定要删除学生 [{student_name}] 吗？"):
             # 从数据中删除
